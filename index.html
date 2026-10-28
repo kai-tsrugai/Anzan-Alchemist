@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>暗算アルケミスト (Anzan Alchemist)</title>
+  <title>暗算アルケミスト RPG</title>
   <style>
     * {
       box-sizing: border-box;
@@ -14,7 +14,7 @@
     }
 
     body {
-      background: linear-gradient(135deg, #1a1c29, #0d0e15);
+      background: linear-gradient(135deg, #12131C, #08090D);
       color: #fff;
       display: flex;
       justify-content: center;
@@ -25,273 +25,508 @@
 
     #game-container {
       width: 100%;
-      max-width: 480px;
-      background: #252836;
+      max-width: 520px;
+      background: #1D1F2C;
       border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      border: 1px solid #3b3f54;
+      padding: 15px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+      border: 1px solid #2A2E42;
       text-align: center;
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    h1 {
-      font-size: 22px;
-      color: #ffd700;
-      margin-bottom: 15px;
-      text-shadow: 0 0 10px rgba(255,215,0,0.3);
+    /* 放置バトルエリア（非表示用） */
+    .battle-area {
+      background: #12141E;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #333850;
+      position: relative;
+    }
+
+    .battle-area.hidden, .tab-nav.hidden {
+      display: none !important;
+    }
+
+    .battle-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .coin-display {
+      color: #FFD700;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .battle-stage-display {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #181A27;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .entity-box {
+      font-size: 28px;
+      transition: transform 0.1s;
+    }
+
+    .hp-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #2A2E42;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .hp-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #FF5252, #FF7B00);
+      width: 100%;
+      transition: width 0.1s linear;
+    }
+
+    /* タブナビゲーション */
+    .tab-nav {
+      display: flex;
+      gap: 5px;
+      background: #12141E;
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      color: #8E95AD;
+      border: none;
+      padding: 8px 4px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #2D3248;
+      color: #FFD700;
     }
 
     .screen {
       display: none;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .screen.active {
       display: flex;
-      flex-direction: column;
-      gap: 15px;
     }
 
+    /* ボタンデザイン */
     .btn {
-      background: linear-gradient(135deg, #ff7b00, #ff5252);
+      background: linear-gradient(135deg, #FF7B00, #FF5252);
       color: white;
       border: none;
-      padding: 14px 20px;
-      font-size: 16px;
+      padding: 12px 16px;
+      font-size: 15px;
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
-      transition: transform 0.1s, filter 0.2s;
       box-shadow: 0 4px 10px rgba(255,82,82,0.3);
     }
 
     .btn:active {
-      transform: scale(0.96);
+      transform: scale(0.97);
     }
 
     .btn-secondary {
-      background: #3b3f54;
+      background: #333850;
       box-shadow: none;
     }
 
     .btn-mode-b {
-      background: linear-gradient(135deg, #00b4db, #0083b0);
+      background: linear-gradient(135deg, #00B4DB, #0083B0);
       box-shadow: 0 4px 10px rgba(0,180,219,0.3);
     }
 
-    /* 学年選択ボタン */
+    /* メニュー & 学年選択 */
     .grade-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 5px;
+      gap: 6px;
     }
 
     .grade-btn {
-      background: #34384a;
-      color: #a0a5b5;
-      border: 2px solid #4a4f68;
-      padding: 10px;
-      font-size: 14px;
+      background: #25293C;
+      color: #8E95AD;
+      border: 2px solid #333850;
+      padding: 8px;
+      font-size: 12px;
       font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
     }
 
     .grade-btn.selected {
-      background: #ffd700;
-      color: #1a1c29;
-      border-color: #ffaa00;
+      background: #FFD700;
+      color: #12131C;
+      border-color: #FFAA00;
     }
 
-    .section-title {
-      font-size: 13px;
-      color: #ffd700;
-      text-align: left;
-      margin-top: 5px;
-    }
-
-    .menu-desc {
-      font-size: 12px;
-      color: #a0a5b5;
-      margin-top: -5px;
+    /* ショップ (アップグレード) */
+    .buy-count-toggle {
+      display: flex;
+      justify-content: flex-end;
+      gap: 5px;
       margin-bottom: 5px;
     }
 
-    /* ゲーム共通ヘッダー */
+    .cnt-btn {
+      background: #25293C;
+      color: #8E95AD;
+      border: 1px solid #333850;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .cnt-btn.active {
+      background: #4FACFE;
+      color: #fff;
+      border-color: #4FACFE;
+    }
+
+    .shop-item {
+      background: #12141E;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #2A2E42;
+    }
+
+    .shop-info {
+      text-align: left;
+    }
+
+    .shop-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #E2E8F0;
+    }
+
+    .shop-desc {
+      font-size: 11px;
+      color: #8E95AD;
+    }
+
+    .shop-lv {
+      font-size: 11px;
+      color: #FFD700;
+    }
+
+    .buy-btn {
+      background: #2D3248;
+      color: #FFD700;
+      border: 1px solid #FFD700;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      min-width: 90px;
+    }
+
+    .buy-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #555;
+      color: #888;
+    }
+
+    /* 装備画面 */
+    .equip-slots {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .equip-slot {
+      background: #12141E;
+      border: 1px dashed #333850;
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 70px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .equip-slot.equipped {
+      border-style: solid;
+      border-color: #FFD700;
+      background: #1C2030;
+    }
+
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #12141E;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .item-card {
+      background: #25293C;
+      border: 1px solid #333850;
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .item-card.rare-common { border-color: #8E95AD; }
+    .item-card.rare-rare { border-color: #00B4DB; color: #00B4DB; }
+    .item-card.rare-epic { border-color: #A855F7; color: #A855F7; }
+    .item-card.rare-legendary { border-color: #FFD700; color: #FFD700; }
+
+    /* 暗算モード共通 */
     .game-header {
       display: flex;
       justify-content: space-between;
-      background: #1a1c29;
-      padding: 10px 15px;
+      background: #12141E;
+      padding: 8px 12px;
       border-radius: 8px;
-      font-size: 14px;
-      font-weight: bold;
+      font-size: 13px;
     }
 
-    .stat-val {
-      color: #4facfe;
-    }
+    .stat-val { color: #4FACFE; font-weight: bold; }
 
-    /* モードA */
     .question-box {
-      font-size: 36px;
+      font-size: 32px;
       font-weight: bold;
-      background: #1e202e;
-      padding: 20px;
-      border-radius: 12px;
-      letter-spacing: 2px;
-      border: 2px solid #3b3f54;
+      background: #12141E;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #333850;
     }
 
     .answer-display {
-      font-size: 28px;
-      height: 45px;
-      background: #1a1c29;
+      font-size: 24px;
+      height: 40px;
+      background: #12141E;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #ffd700;
-      border: 1px dashed #4fa3d1;
+      color: #FFD700;
+      border: 1px dashed #00B4DB;
     }
 
     .keypad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
 
     .num-btn {
-      background: #34384a;
+      background: #25293C;
       color: white;
       border: none;
-      padding: 15px;
-      font-size: 20px;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .num-btn:active {
-      background: #4a4f68;
-    }
-
-    /* モードB */
-    .target-box {
-      background: #1e202e;
-      padding: 15px;
-      border-radius: 12px;
-      border: 2px solid #00b4db;
-    }
-
-    .target-title {
-      font-size: 12px;
-      color: #a0a5b5;
-    }
-
-    .target-num {
-      font-size: 40px;
-      font-weight: bold;
-      color: #00d2ff;
-    }
-
-    .formula-display {
-      min-height: 50px;
-      background: #1a1c29;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      padding: 5px 10px;
-      color: #ffd700;
-      border: 1px dashed #00b4db;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .cards-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-    }
-
-    .card-btn {
-      background: #34384a;
-      color: white;
-      border: 2px solid #4a4f68;
-      padding: 12px 18px;
+      padding: 12px;
       font-size: 18px;
       font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
     }
 
-    .card-btn.op {
-      background: #2c3e50;
-      border-color: #3498db;
-      color: #3498db;
+    /* モードB */
+    .target-box {
+      background: #12141E;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #00B4DB;
     }
 
-    .card-btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
+    .target-num { font-size: 32px; font-weight: bold; color: #00B4DB; }
+
+    .formula-display {
+      min-height: 40px;
+      background: #12141E;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #FFD700;
+      border: 1px dashed #00B4DB;
     }
 
-    .actions-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+    .cards-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
     }
 
-    /* リザルト画面 */
-    .result-score {
-      font-size: 48px;
-      color: #ffd700;
+    .card-btn {
+      background: #25293C;
+      color: white;
+      border: 1px solid #333850;
+      padding: 10px 14px;
+      font-size: 16px;
       font-weight: bold;
-      margin: 10px 0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .card-btn.op { color: #00B4DB; border-color: #00B4DB; }
+    .card-btn:disabled { opacity: 0.3; }
+
+    /* オフライン報酬モーダル */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #1D1F2C;
+      border: 2px solid #FFD700;
+      border-radius: 16px;
+      padding: 20px;
+      max-width: 360px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      color: #FFD700;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .modal-reward {
+      font-size: 28px;
+      color: #FFD700;
+      font-weight: bold;
+      margin: 15px 0;
     }
   </style>
 </head>
 <body>
 
 <div id="game-container">
-  <h1>🧪 暗算アルケミスト 🧪</h1>
+  <!-- 放置バトル（暗算中は非表示になります） -->
+  <div class="battle-area" id="battle-area">
+    <div class="battle-header">
+      <div>🪙 コイン: <span id="coin-txt" class="coin-display">0</span></div>
+      <div style="font-size: 11px; color: #8E95AD;">ステージ <span id="stage-txt">1</span></div>
+    </div>
+    <div class="battle-stage-display">
+      <div>
+        <div class="entity-box" id="hero-anim">🧙‍♂️</div>
+        <div style="font-size: 10px; color: #8E95AD;">Hero</div>
+      </div>
+      <div style="font-size: 12px; color: #FF5252; font-weight: bold;" id="battle-log">VS</div>
+      <div>
+        <div class="entity-box" id="enemy-anim">👾</div>
+        <div style="font-size: 10px; color: #8E95AD;" id="enemy-name">スライム</div>
+      </div>
+    </div>
+    <div class="hp-bar-bg"><div id="hp-bar" class="hp-bar-fill"></div></div>
+  </div>
+
+  <!-- タブナビゲーション -->
+  <div class="tab-nav" id="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('menu')">🎮 暗算</button>
+    <button class="tab-btn" onclick="switchTab('shop')">⚡ 強化</button>
+    <button class="tab-btn" onclick="switchTab('equip')">⚔️ 装備</button>
+  </div>
 
   <!-- メニュー画面 -->
-  <div id="menu-screen" class="screen active">
-    <div class="section-title">📚 対象の学年を選んでね</div>
+  <div id="tab-menu" class="screen active">
+    <div style="text-align: left; font-size: 12px; color: #FFD700;">📚 学年選択</div>
     <div class="grade-grid">
       <button class="grade-btn selected" id="grade-1" onclick="setGrade(1)">低学年<br>(1・2年)</button>
       <button class="grade-btn" id="grade-3" onclick="setGrade(3)">中学年<br>(3・4年)</button>
       <button class="grade-btn" id="grade-5" onclick="setGrade(5)">高学年<br>(5・6年)</button>
     </div>
 
-    <div style="margin-top: 5px;">
-      <button class="btn" onclick="startModeA()">モードA: ポーション・ラッシュ</button>
-      <div class="menu-desc">制限時間内に素早く暗算！連鎖スピード勝負</div>
+    <button class="btn" onclick="startModeA()">モードA: ポーション・ラッシュ</button>
+    <button class="btn btn-mode-b" onclick="startModeB()">モードB: マテリアル・シンセシス</button>
+  </div>
+
+  <!-- ショップ画面 -->
+  <div id="tab-shop" class="screen">
+    <div class="buy-count-toggle">
+      <button class="cnt-btn active" onclick="setBuyCount(1, this)">x1</button>
+      <button class="cnt-btn" onclick="setBuyCount(10, this)">x10</button>
+      <button class="cnt-btn" onclick="setBuyCount(100, this)">x100</button>
+      <button class="cnt-btn" onclick="setBuyCount('MAX', this)">MAX</button>
     </div>
-    
-    <div>
-      <button class="btn btn-mode-b" onclick="startModeB()">モードB: マテリアル・シンセシス</button>
-      <div class="menu-desc">数字と記号を選んで目標の数を作る逆算パズル</div>
+    <div id="shop-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+  </div>
+
+  <!-- 装備画面 -->
+  <div id="tab-equip" class="screen">
+    <div style="text-align: left; font-size: 12px; color: #FFD700;">⚔️ 現在の装備</div>
+    <div class="equip-slots">
+      <div class="equip-slot" id="slot-weapon" onclick="unequip('weapon')">
+        <span style="color:#8E95AD;">[武器]</span>
+        <span>未装備</span>
+      </div>
+      <div class="equip-slot" id="slot-armor" onclick="unequip('armor')">
+        <span style="color:#8E95AD;">[防具]</span>
+        <span>未装備</span>
+      </div>
+      <div class="equip-slot" id="slot-accessory" onclick="unequip('accessory')">
+        <span style="color:#8E95AD;">[装飾品]</span>
+        <span>未装備</span>
+      </div>
     </div>
+
+    <div style="text-align: left; font-size: 12px; color: #FFD700; margin-top: 5px;">🎒 インベントリ（タップで装備）</div>
+    <div class="inventory-grid" id="inventory-list"></div>
   </div>
 
   <!-- モードA: タイムアタック -->
   <div id="mode-a-screen" class="screen">
     <div class="game-header">
-      <div>タイム: <span id="mode-a-time" class="stat-val">30</span>s</div>
+      <div>⏰ <span id="mode-a-time" class="stat-val">30</span>s</div>
       <div>スコア: <span id="mode-a-score" class="stat-val">0</span></div>
       <div>コンボ: <span id="mode-a-combo" class="stat-val">0</span></div>
     </div>
-
     <div class="question-box" id="mode-a-question">12 + 15 = ?</div>
     <div class="answer-display" id="mode-a-answer"></div>
-
     <div class="keypad">
       <button class="num-btn" onclick="pressNumA(7)">7</button>
       <button class="num-btn" onclick="pressNumA(8)">8</button>
@@ -304,8 +539,9 @@
       <button class="num-btn" onclick="pressNumA(3)">3</button>
       <button class="num-btn" onclick="clearA()">C</button>
       <button class="num-btn" onclick="pressNumA(0)">0</button>
-      <button class="num-btn" style="background:#ff5252;" onclick="checkAnswerA()">OK</button>
+      <button class="num-btn" style="background:#FF5252;" onclick="checkAnswerA()">OK</button>
     </div>
+    <button class="btn btn-secondary" onclick="exitGame()">中断して戻る</button>
   </div>
 
   <!-- モードB: ターゲットパズル -->
@@ -314,76 +550,392 @@
       <div>問題: <span id="mode-b-stage" class="stat-val">1/5</span></div>
       <div>スコア: <span id="mode-b-score" class="stat-val">0</span></div>
     </div>
-
     <div class="target-box">
-      <div class="target-title">TARGET</div>
+      <div style="font-size:10px; color:#8E95AD;">TARGET</div>
       <div class="target-num" id="mode-b-target">24</div>
     </div>
-
     <div class="formula-display" id="mode-b-formula"></div>
-
-    <div style="font-size: 12px; color: #a0a5b5;">数字カード</div>
     <div class="cards-grid" id="mode-b-num-cards"></div>
-
-    <div style="font-size: 12px; color: #a0a5b5;">計算記号</div>
     <div class="cards-grid" id="mode-b-op-cards"></div>
-
-    <div class="actions-row">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <button class="btn btn-secondary" onclick="resetFormulaB()">やり直す</button>
-      <button class="btn btn-mode-b" onclick="checkFormulaB()">調合（計算）</button>
+      <button class="btn btn-mode-b" onclick="checkFormulaB()">調合</button>
     </div>
+    <button class="btn btn-secondary" onclick="exitGame()">中断して戻る</button>
   </div>
 
   <!-- リザルト画面 -->
   <div id="result-screen" class="screen">
     <h2 id="result-title">GAME OVER</h2>
-    <div class="result-score" id="final-score">0</div>
-    <p id="result-msg" style="color: #a0a5b5; margin-bottom: 15px;"></p>
-    <button class="btn" onclick="showMenu()">メニューに戻る</button>
+    <div style="font-size: 36px; color: #FFD700; font-weight: bold;" id="final-score">0 pt</div>
+    <p id="result-msg" style="font-size: 12px; color: #8E95AD;"></p>
+    <button class="btn" onclick="exitGame()">メニューに戻る</button>
+  </div>
+</div>
+
+<!-- オフライン報酬ダイアログ -->
+<div id="offline-modal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-title">🌙 おかえりなさい！</div>
+    <div style="font-size: 13px; color: #8E95AD;">離れていた時間: <span id="offline-time" style="color:#FFF;">0分</span></div>
+    <div class="modal-reward">+<span id="offline-coins">0</span> 🪙</div>
+    <p style="font-size: 11px; color: #8E95AD; margin-bottom: 15px;">ヒーローがオフライン中も戦ってコインを集めてくれました！</p>
+    <button class="btn" onclick="closeOfflineModal()">受け取る</button>
   </div>
 </div>
 
 <script>
-  let selectedGrade = 1; // デフォルトは低学年(1,3)
+  let gameData = {
+    coins: 0,
+    stage: 1,
+    lastTime: Date.now(),
+    upgrades: {
+      atk: { lv: 1, max: 1500, baseCost: 10, costMult: 1.15, name: '攻撃力', desc: '放置ダメUP' },
+      spd: { lv: 1, max: 1500, baseCost: 15, costMult: 1.15, name: '攻撃速度', desc: '攻撃CD短縮' },
+      drop: { lv: 1, max: 1500, baseCost: 20, costMult: 1.20, name: 'ドロップ率', desc: '装備ドロップ率UP' },
+      coin: { lv: 1, max: 1500, baseCost: 25, costMult: 1.20, name: 'コイン倍率', desc: '獲得コインUP' }
+    },
+    equipped: { weapon: null, armor: null, accessory: null },
+    inventory: []
+  };
 
-  function setGrade(grade) {
-    selectedGrade = grade;
-    document.querySelectorAll('.grade-btn').forEach(btn => btn.classList.remove('selected'));
-    document.getElementById(`grade-${grade}`).classList.add('selected');
+  let buyAmount = 1;
+  let selectedGrade = 1;
+
+  const monsterTypes = [
+    { name: 'スライム', icon: '👾', hp: 20 },
+    { name: 'ゴブリン', icon: '👺', hp: 50 },
+    { name: 'オーク', icon: '👹', hp: 120 },
+    { name: 'ドラゴン', icon: '🐉', hp: 300 }
+  ];
+  let currentEnemy = { name: '', icon: '', hp: 20, maxHp: 20, reward: 5 };
+  let autoAttackCd = 0;
+
+  function init() {
+    loadGame();
+    spawnEnemy();
+    renderShop();
+    renderEquip();
+    checkOfflineEarnings();
+    setInterval(gameLoop, 100);
+    setInterval(saveGame, 5000);
   }
 
-  function showScreen(screenId) {
+  function saveGame() {
+    gameData.lastTime = Date.now();
+    localStorage.setItem('anzan_alchemist_save', JSON.stringify(gameData));
+  }
+
+  function loadGame() {
+    const saved = localStorage.getItem('anzan_alchemist_save');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        gameData = { ...gameData, ...parsed };
+      } catch(e){}
+    }
+  }
+
+  function checkOfflineEarnings() {
+    const now = Date.now();
+    const elapsedSec = Math.floor((now - (gameData.lastTime || now)) / 1000);
+    
+    if (elapsedSec >= 10) {
+      const cappedSec = Math.min(elapsedSec, 86400);
+      const atk = getStat('atk');
+      const spd = getStat('spd');
+      const dps = atk * spd;
+      
+      const coinMult = (1 + (gameData.upgrades.coin.lv - 1) * 0.1) * (1 + getEquipBonus('coin') / 100);
+      const estEnemyHp = 20 * Math.pow(1.2, gameData.stage - 1);
+      const estEnemyReward = 5 * Math.pow(1.2, gameData.stage - 1) * coinMult;
+      
+      const coinsPerSec = (dps / estEnemyHp) * estEnemyReward;
+      const earnedCoins = Math.floor(coinsPerSec * cappedSec);
+
+      if (earnedCoins > 0) {
+        gameData.coins += earnedCoins;
+        let timeStr = cappedSec >= 3600 ? `${Math.floor(cappedSec / 3600)}時間 ${Math.floor((cappedSec % 3600) / 60)}分` : `${Math.floor(cappedSec / 60)}分 ${cappedSec % 60}秒`;
+
+        document.getElementById('offline-time').innerText = timeStr;
+        document.getElementById('offline-coins').innerText = earnedCoins.toLocaleString();
+        document.getElementById('offline-modal').style.display = 'flex';
+      }
+    }
+  }
+
+  function closeOfflineModal() {
+    document.getElementById('offline-modal').style.display = 'none';
+  }
+
+  function getStat(type) {
+    const up = gameData.upgrades[type];
+    if (type === 'atk') return Math.floor(up.lv * 5);
+    if (type === 'spd') return 1 + (up.lv * 0.005);
+    return up.lv;
+  }
+
+  function getEquipBonus(type) {
+    let total = 0;
+    Object.values(gameData.equipped).forEach(eq => {
+      if (eq && eq.statType === type) total += eq.statVal;
+    });
+    return total;
+  }
+
+  function spawnEnemy() {
+    const typeIdx = (gameData.stage - 1) % monsterTypes.length;
+    const base = monsterTypes[typeIdx];
+    const mult = Math.pow(1.2, gameData.stage - 1);
+    currentEnemy.name = base.name;
+    currentEnemy.icon = base.icon;
+    currentEnemy.maxHp = Math.floor(base.hp * mult);
+    currentEnemy.hp = currentEnemy.maxHp;
+    currentEnemy.reward = Math.floor(5 * mult);
+
+    document.getElementById('enemy-anim').innerText = currentEnemy.icon;
+    document.getElementById('enemy-name').innerText = currentEnemy.name;
+    document.getElementById('stage-txt').innerText = gameData.stage;
+    updateHpBar();
+  }
+
+  function updateHpBar() {
+    const pct = Math.max(0, (currentEnemy.hp / currentEnemy.maxHp) * 100);
+    document.getElementById('hp-bar').style.width = pct + '%';
+  }
+
+  function gameLoop() {
+    document.getElementById('coin-txt').innerText = Math.floor(gameData.coins).toLocaleString();
+
+    autoAttackCd += 0.1 * getStat('spd');
+    if (autoAttackCd >= 1.0) {
+      autoAttackCd = 0;
+      dealDamage(getStat('atk'));
+    }
+  }
+
+  function dealDamage(amount) {
+    currentEnemy.hp -= amount;
+    const heroEl = document.getElementById('hero-anim');
+    if (heroEl) {
+      heroEl.style.transform = 'scale(1.2)';
+      setTimeout(() => heroEl.style.transform = 'scale(1)', 100);
+    }
+
+    if (currentEnemy.hp <= 0) {
+      const coinMult = (1 + (gameData.upgrades.coin.lv - 1) * 0.1) * (1 + getEquipBonus('coin') / 100);
+      const gained = Math.floor(currentEnemy.reward * coinMult);
+      gameData.coins += gained;
+
+      const dropChance = 0.1 * (1 + gameData.upgrades.drop.lv * 0.05);
+      if (Math.random() < dropChance) {
+        dropEquipment();
+      }
+
+      gameData.stage++;
+      spawnEnemy();
+    } else {
+      updateHpBar();
+    }
+  }
+
+  function dropEquipment() {
+    const types = ['weapon', 'armor', 'accessory'];
+    const slot = types[Math.floor(Math.random() * types.length)];
+    const r = Math.random();
+    let rarity = 'common';
+    let mult = 1;
+    if (r < 0.05) { rarity = 'legendary'; mult = 5; }
+    else if (r < 0.2) { rarity = 'epic'; mult = 3; }
+    else if (r < 0.5) { rarity = 'rare'; mult = 2; }
+
+    let statType = 'score';
+    let name = '知恵の指輪';
+    if (slot === 'weapon') { statType = 'time'; name = '計算の杖'; }
+    if (slot === 'armor') { statType = 'coin'; name = '数式のローブ'; }
+
+    const item = {
+      id: Date.now(),
+      slot, rarity, name, statType,
+      statVal: Math.floor((Math.random() * 5 + 5) * mult)
+    };
+
+    gameData.inventory.push(item);
+    renderEquip();
+  }
+
+  function setBuyCount(cnt, btn) {
+    buyAmount = cnt;
+    document.querySelectorAll('.cnt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderShop();
+  }
+
+  function renderShop() {
+    const list = document.getElementById('shop-list');
+    list.innerHTML = "";
+
+    Object.keys(gameData.upgrades).forEach(key => {
+      const up = gameData.upgrades[key];
+      const count = getBuyCount(up);
+      const cost = getCostForCount(up, count);
+
+      const div = document.createElement('div');
+      div.className = 'shop-item';
+      div.innerHTML = `
+        <div class="shop-info">
+          <div class="shop-title">${up.name} <span class="shop-lv">Lv.${up.lv}/${up.max}</span></div>
+          <div class="shop-desc">${up.desc}</div>
+        </div>
+        <button class="buy-btn" ${gameData.coins < cost || up.lv >= up.max ? 'disabled' : ''} onclick="buyUpgrade('${key}')">
+          ${up.lv >= up.max ? 'MAX' : `+${count} <br>🪙${Math.floor(cost)}`}
+        </button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function getBuyCount(up) {
+    if (buyAmount === 'MAX') {
+      let count = 0;
+      let currCost = 0;
+      let tempLv = up.lv;
+      while (tempLv < up.max) {
+        let nextCost = up.baseCost * Math.pow(up.costMult, tempLv - 1);
+        if (currCost + nextCost > gameData.coins) break;
+        currCost += nextCost;
+        tempLv++;
+        count++;
+      }
+      return Math.max(1, count);
+    }
+    return Math.min(buyAmount, up.max - up.lv);
+  }
+
+  function getCostForCount(up, count) {
+    let total = 0;
+    for (let i = 0; i < count; i++) {
+      total += up.baseCost * Math.pow(up.costMult, (up.lv + i) - 1);
+    }
+    return total;
+  }
+
+  function buyUpgrade(key) {
+    const up = gameData.upgrades[key];
+    const count = getBuyCount(up);
+    const cost = getCostForCount(up, count);
+
+    if (gameData.coins >= cost && up.lv < up.max) {
+      gameData.coins -= cost;
+      up.lv += count;
+      renderShop();
+    }
+  }
+
+  function renderEquip() {
+    ['weapon', 'armor', 'accessory'].forEach(slot => {
+      const el = document.getElementById(`slot-${slot}`);
+      const eq = gameData.equipped[slot];
+      if (eq) {
+        el.className = 'equip-slot equipped';
+        el.innerHTML = `<span style="color:#FFD700;">[${eq.name}]</span><span>${getStatDesc(eq)}</span>`;
+      } else {
+        el.className = 'equip-slot';
+        el.innerHTML = `<span style="color:#8E95AD;">[${slot}]</span><span>未装備</span>`;
+      }
+    });
+
+    const inv = document.getElementById('inventory-list');
+    inv.innerHTML = "";
+    gameData.inventory.forEach(item => {
+      const card = document.createElement('div');
+      card.className = `item-card rare-${item.rarity}`;
+      card.innerHTML = `<div>${item.name}</div><div>${getStatDesc(item)}</div>`;
+      card.onclick = () => equipItem(item);
+      inv.appendChild(card);
+    });
+  }
+
+  function getStatDesc(item) {
+    if (item.statType === 'time') return `タイム +${item.statVal}s`;
+    if (item.statType === 'score') return `スコア +${item.statVal}%`;
+    if (item.statType === 'coin') return `コイン +${item.statVal}%`;
+    return '';
+  }
+
+  function equipItem(item) {
+    if (gameData.equipped[item.slot]) {
+      gameData.inventory.push(gameData.equipped[item.slot]);
+    }
+    gameData.equipped[item.slot] = item;
+    gameData.inventory = gameData.inventory.filter(i => i.id !== item.id);
+    renderEquip();
+  }
+
+  function unequip(slot) {
+    if (gameData.equipped[slot]) {
+      gameData.inventory.push(gameData.equipped[slot]);
+      gameData.equipped[slot] = null;
+      renderEquip();
+    }
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
+
+    if (tab === 'menu') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('tab-menu').classList.add('active');
+    } else if (tab === 'shop') {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('tab-shop').classList.add('active');
+      renderShop();
+    } else if (tab === 'equip') {
+      document.querySelectorAll('.tab-btn')[2].classList.add('active');
+      document.getElementById('tab-equip').classList.add('active');
+      renderEquip();
+    }
   }
 
-  function showMenu() {
-    showScreen('menu-screen');
+  function setGrade(g) {
+    selectedGrade = g;
+    document.querySelectorAll('.grade-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById(`grade-${g}`).classList.add('selected');
+  }
+
+  // 暗算ゲーム開始時に放置画面とタブを確実に非表示にする
+  function enterGameScreen() {
+    document.getElementById('battle-area').classList.add('hidden');
+    document.getElementById('tab-nav').classList.add('hidden');
+  }
+
+  // メニューに戻るときに放置画面とタブを再表示する
+  function exitGame() {
+    clearInterval(timerA);
+    document.getElementById('battle-area').classList.remove('hidden');
+    document.getElementById('tab-nav').classList.remove('hidden');
+    switchTab('menu');
   }
 
   /* ----------------------------------
-   * モードA: タイムアタック連鎖ポーション
+   * 暗算モードA (タイムアタック)
    * ---------------------------------- */
-  let scoreA = 0;
-  let comboA = 0;
-  let timeA = 30;
-  let timerA = null;
-  let currentAnsA = 0;
-  let inputAnsA = "";
+  let scoreA = 0, comboA = 0, timeA = 30, timerA = null, currentAnsA = 0, inputAnsA = "";
 
   function startModeA() {
-    scoreA = 0;
-    comboA = 0;
-    timeA = 30;
+    scoreA = 0; comboA = 0;
+    timeA = 30 + getEquipBonus('time');
     inputAnsA = "";
     document.getElementById('mode-a-score').innerText = scoreA;
     document.getElementById('mode-a-combo').innerText = comboA;
     document.getElementById('mode-a-time').innerText = timeA;
-    document.getElementById('mode-a-answer').innerText = "";
-    
-    nextQuestionA();
-    showScreen('mode-a-screen');
 
+    enterGameScreen();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('mode-a-screen').classList.add('active');
+
+    nextQuestionA();
     clearInterval(timerA);
     timerA = setInterval(() => {
       timeA--;
@@ -398,71 +950,33 @@
   function nextQuestionA() {
     inputAnsA = "";
     document.getElementById('mode-a-answer').innerText = "";
-    
     let n1, n2, op;
 
-    if (selectedGrade === 1) { 
-      // 低学年: 1桁〜2桁のたし算・ひき算
-      let isPlus = Math.random() < 0.5;
-      if (isPlus) {
+    if (selectedGrade === 1) {
+      if (Math.random() < 0.5) {
         n1 = Math.floor(Math.random() * 20) + 1;
         n2 = Math.floor(Math.random() * 20) + 1;
-        op = "+";
-        currentAnsA = n1 + n2;
+        op = "+"; currentAnsA = n1 + n2;
       } else {
         n1 = Math.floor(Math.random() * 20) + 10;
         n2 = Math.floor(Math.random() * 10) + 1;
-        if(n1 < n2) { let t = n1; n1 = n2; n2 = t; }
-        op = "-";
-        currentAnsA = n1 - n2;
+        op = "-"; currentAnsA = n1 - n2;
       }
     } else if (selectedGrade === 3) {
-      // 中学年: 九九の応用、2桁+2桁、かけ算
-      let type = Math.floor(Math.random() * 3);
-      if (type === 0) {
-        n1 = Math.floor(Math.random() * 50) + 10;
-        n2 = Math.floor(Math.random() * 50) + 10;
-        op = "+";
-        currentAnsA = n1 + n2;
-      } else if (type === 1) {
-        n1 = Math.floor(Math.random() * 50) + 20;
-        n2 = Math.floor(Math.random() * 20) + 1;
-        op = "-";
-        currentAnsA = n1 - n2;
-      } else {
-        n1 = Math.floor(Math.random() * 8) + 2;
-        n2 = Math.floor(Math.random() * 9) + 1;
-        op = "×";
-        currentAnsA = n1 * n2;
-      }
+      n1 = Math.floor(Math.random() * 9) + 2;
+      n2 = Math.floor(Math.random() * 9) + 1;
+      op = "×"; currentAnsA = n1 * n2;
     } else {
-      // 高学年: 2桁×1桁、わり算（割り切れる）、少し大きめの計算
-      let type = Math.floor(Math.random() * 3);
-      if (type === 0) {
-        n1 = Math.floor(Math.random() * 80) + 20;
-        n2 = Math.floor(Math.random() * 80) + 20;
-        op = "+";
-        currentAnsA = n1 + n2;
-      } else if (type === 1) {
-        n1 = Math.floor(Math.random() * 9) + 2;
-        n2 = Math.floor(Math.random() * 50) + 11;
-        op = "×";
-        currentAnsA = n1 * n2;
-      } else {
-        n2 = Math.floor(Math.random() * 8) + 2;
-        let ans = Math.floor(Math.random() * 12) + 2;
-        n1 = n2 * ans; // 割り切れるように作る
-        op = "÷";
-        currentAnsA = ans;
-      }
+      n2 = Math.floor(Math.random() * 8) + 2;
+      let ans = Math.floor(Math.random() * 12) + 2;
+      n1 = n2 * ans; op = "÷"; currentAnsA = ans;
     }
-
     document.getElementById('mode-a-question').innerText = `${n1} ${op} ${n2} = ?`;
   }
 
-  function pressNumA(num) {
+  function pressNumA(n) {
     if (inputAnsA.length < 4) {
-      inputAnsA += num;
+      inputAnsA += n;
       document.getElementById('mode-a-answer').innerText = inputAnsA;
     }
   }
@@ -474,18 +988,21 @@
 
   function checkAnswerA() {
     if (inputAnsA === "") return;
-
     if (parseInt(inputAnsA) === currentAnsA) {
       comboA++;
-      let addScore = 100 + (comboA * 20);
-      scoreA += addScore;
-      timeA += 2; 
+      const scoreMult = 1 + getEquipBonus('score') / 100;
+      scoreA += Math.floor((100 + comboA * 20) * scoreMult);
+      timeA += 2;
       document.getElementById('mode-a-score').innerText = scoreA;
       document.getElementById('mode-a-combo').innerText = comboA;
+
+      dealDamage(getStat('atk') * 5);
+      gameData.coins += 10;
+
       nextQuestionA();
     } else {
       comboA = 0;
-      document.getElementById('mode-a-combo').innerText = comboA;
+      document.getElementById('mode-a-combo').innerText = 0;
       clearA();
     }
   }
@@ -493,57 +1010,37 @@
   function endGameA() {
     document.getElementById('result-title').innerText = "タイムアップ！";
     document.getElementById('final-score').innerText = scoreA + " pt";
-    document.getElementById('result-msg').innerText = `最大コンボ数: ${comboA}`;
-    showScreen('result-screen');
+    document.getElementById('result-msg').innerText = `最大コンボ: ${comboA}`;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('result-screen').classList.add('active');
   }
 
-
   /* ----------------------------------
-   * モードB: マテリアル・シンセシス
+   * 暗算モードB (ターゲットパズル)
    * ---------------------------------- */
-  let stageB = 1;
-  let maxStageB = 5;
-  let scoreB = 0;
-  let targetNumB = 0;
-  let selectedTokensB = [];
-  let availableNumsB = [];
-  let opsB = ['+', '-'];
+  let stageB = 1, scoreB = 0, targetNumB = 0, selectedTokensB = [], availableNumsB = [], opsB = ['+', '-'];
 
   function startModeB() {
-    stageB = 1;
-    scoreB = 0;
-    // 学年に応じて使える記号を変える
-    if (selectedGrade === 1) {
-      opsB = ['+', '-'];
-    } else if (selectedGrade === 3) {
-      opsB = ['+', '-', '×'];
-    } else {
-      opsB = ['+', '-', '×', '÷'];
-    }
+    stageB = 1; scoreB = 0;
+    opsB = selectedGrade === 1 ? ['+', '-'] : (selectedGrade === 3 ? ['+', '-', '×'] : ['+', '-', '×', '÷']);
     setupStageB();
-    showScreen('mode-b-screen');
+    
+    enterGameScreen();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('mode-b-screen').classList.add('active');
   }
 
   function setupStageB() {
     selectedTokensB = [];
-    document.getElementById('mode-b-stage').innerText = `${stageB}/${maxStageB}`;
+    document.getElementById('mode-b-stage').innerText = `${stageB}/5`;
     document.getElementById('mode-b-score').innerText = scoreB;
-    
-    // 学年に応じた数の範囲
-    let maxVal = selectedGrade === 1 ? 9 : (selectedGrade === 3 ? 12 : 20);
-    
+
+    let maxVal = selectedGrade === 1 ? 9 : 15;
     availableNumsB = [];
-    for(let i=0; i<4; i++) {
+    for (let i = 0; i < 4; i++) {
       availableNumsB.push({ id: i, val: Math.floor(Math.random() * maxVal) + 2, used: false });
     }
-
-    // 簡単なターゲット自動計算（最初の2つの数字と最初の演算子で仮作成）
-    let n1 = availableNumsB[0].val;
-    let n2 = availableNumsB[1].val;
-    let n3 = availableNumsB[2].val;
-    targetNumB = (n1 + n2) * n3;
-    if (targetNumB > 100) targetNumB = n1 * n2 + n3;
-
+    targetNumB = (availableNumsB[0].val + availableNumsB[1].val) * availableNumsB[2].val;
     document.getElementById('mode-b-target').innerText = targetNumB;
     renderCardsB();
     updateFormulaDisplayB();
@@ -557,7 +1054,11 @@
       btn.className = 'card-btn';
       btn.innerText = item.val;
       btn.disabled = item.used || (selectedTokensB.length % 2 !== 0);
-      btn.onclick = () => selectNumB(item);
+      btn.onclick = () => {
+        item.used = true;
+        selectedTokensB.push({ type: 'num', val: item.val, ref: item });
+        renderCardsB(); updateFormulaDisplayB();
+      };
       numGrid.appendChild(btn);
     });
 
@@ -568,79 +1069,58 @@
       btn.className = 'card-btn op';
       btn.innerText = op;
       btn.disabled = (selectedTokensB.length % 2 === 0);
-      btn.onclick = () => selectOpB(op);
+      btn.onclick = () => {
+        selectedTokensB.push({ type: 'op', val: op });
+        renderCardsB(); updateFormulaDisplayB();
+      };
       opGrid.appendChild(btn);
     });
   }
 
-  function selectNumB(item) {
-    item.used = true;
-    selectedTokensB.push({ type: 'num', val: item.val, ref: item });
-    renderCardsB();
-    updateFormulaDisplayB();
-  }
-
-  function selectOpB(op) {
-    selectedTokensB.push({ type: 'op', val: op });
-    renderCardsB();
-    updateFormulaDisplayB();
-  }
-
   function resetFormulaB() {
-    selectedTokensB.forEach(t => {
-      if(t.type === 'num') t.ref.used = false;
-    });
+    selectedTokensB.forEach(t => { if (t.type === 'num') t.ref.used = false; });
     selectedTokensB = [];
-    renderCardsB();
-    updateFormulaDisplayB();
+    renderCardsB(); updateFormulaDisplayB();
   }
 
   function updateFormulaDisplayB() {
     const display = document.getElementById('mode-b-formula');
-    if (selectedTokensB.length === 0) {
-      display.innerText = "カードを選んで式を作ろう";
-      return;
-    }
-    display.innerText = selectedTokensB.map(t => t.val).join(" ");
+    display.innerText = selectedTokensB.length === 0 ? "式を作ろう" : selectedTokensB.map(t => t.val).join(" ");
   }
 
   function checkFormulaB() {
-    if (selectedTokensB.length < 3 || selectedTokensB.length % 2 === 0) {
-      alert("正しい計算式を完成させてね！");
-      return;
-    }
-
-    let currentVal = selectedTokensB[0].val;
-    for(let i = 1; i < selectedTokensB.length; i += 2) {
+    if (selectedTokensB.length < 3 || selectedTokensB.length % 2 === 0) return;
+    let val = selectedTokensB[0].val;
+    for (let i = 1; i < selectedTokensB.length; i += 2) {
       let op = selectedTokensB[i].val;
-      let nextNum = selectedTokensB[i+1].val;
-
-      if(op === '+') currentVal += nextNum;
-      if(op === '-') currentVal -= nextNum;
-      if(op === '×') currentVal *= nextNum;
-      if(op === '÷') currentVal = Math.floor(currentVal / nextNum);
+      let next = selectedTokensB[i+1].val;
+      if (op === '+') val += next;
+      if (op === '-') val -= next;
+      if (op === '×') val *= next;
+      if (op === '÷') val = Math.floor(val / next);
     }
 
-    if (currentVal === targetNumB) {
-      scoreB += 500;
-      if (stageB < maxStageB) {
-        stageB++;
-        alert("ピッタリ調合成功！ 次のステージへ！");
-        setupStageB();
+    if (val === targetNumB) {
+      const scoreMult = 1 + getEquipBonus('score') / 100;
+      scoreB += Math.floor(500 * scoreMult);
+      dealDamage(getStat('atk') * 10);
+      gameData.coins += 50;
+
+      if (stageB < 5) {
+        stageB++; setupStageB();
       } else {
-        endGameB();
+        document.getElementById('result-title').innerText = "ステージクリア！";
+        document.getElementById('final-score').innerText = scoreB + " pt";
+        document.getElementById('result-msg').innerText = "パズルマスター！";
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('result-screen').classList.add('active');
       }
     } else {
-      alert(`計算結果: ${currentVal} ➔ 目標は ${targetNumB} だよ！もう一回考えてみよう。`);
+      alert(`計算結果: ${val} (目標: ${targetNumB})`);
     }
   }
 
-  function endGameB() {
-    document.getElementById('result-title').innerText = "全ステージクリア！";
-    document.getElementById('final-score').innerText = scoreB + " pt";
-    document.getElementById('result-msg').innerText = "見事な錬金術師だ！";
-    showScreen('result-screen');
-  }
+  init();
 </script>
 </body>
 </html>
